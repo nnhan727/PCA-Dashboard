@@ -231,7 +231,7 @@ const ScreeHeatTab = ({ pcaResults, dataCtrl, pcaCtrl }) => {
       {/* loading heatmap */}
       <div className="card-container">
         <div className="spread-container">
-          <h3 className="card-title">Trọng số biến</h3>
+          <h3 className="card-title">Trọng số biến (hiển thị tối đa 10 PC đầu tiên)</h3>
           <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400">
             <span className="flex items-center gap-1"><div className="w-3 h-3 bg-red-500 rounded-sm"></div> Âm (-)</span>
             <span className="flex items-center gap-1"><div className="w-3 h-3 bg-slate-100 rounded-sm border"></div> Không (0)</span>
@@ -259,7 +259,7 @@ const ScreeHeatTab = ({ pcaResults, dataCtrl, pcaCtrl }) => {
                     <td className="p-2 text-xs font-semibold text-slate-700 sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100">
                       {col}
                     </td>
-                    {row.slice(0, selectedCols.length).map((val, j) => {
+                    {row.slice(0, 10).map((val, j) => {
                       const absVal = Math.abs(val);
                       const bgColor = val > 0 
                         ? `rgba(59, 130, 246, ${absVal * 0.9})` // Blue
