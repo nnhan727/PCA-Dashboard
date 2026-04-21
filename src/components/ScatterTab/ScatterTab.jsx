@@ -1,7 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Scatter } from 'react-chartjs-2';
 import { RotateCcw, Shapes, Loader2, ChevronsUp, ChevronsDown } from 'lucide-react';
-import KNN from 'ml-knn';
 
 import '../element-style.css';
 import '../input-controller-style.css';

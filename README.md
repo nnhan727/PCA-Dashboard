@@ -1,5 +1,7 @@
 # Cài đặt minh họa PCA
 
+Link: https://nnhan727.github.io/PCA-Dashboard/
+
 ## Quy trình sử dụng
 
 Nên sử dụng ứng dụng theo thứ tự 4 bước tương ứng với 4 Tab sau đây:
@@ -14,12 +16,12 @@ Nên sử dụng ứng dụng theo thứ tự 4 bước tương ứng với 4 Ta
 ### 2. Tab Scree Plot
 *   **Mục tiêu:** Xác định số lượng thành phần chính và hiểu ý nghĩa của chúng.
 *   **Cách dùng:**
-    *   **Scree Plot:** Quan sát điểm khuỷu tay để chọn số lượng thành phần chính $k$ (điều chỉnh ở thanh bên).
+    *   **Scree Plot:** Quan sát điểm khuỷu tay để chọn số lượng thành phần chính $k$ (điều chỉnh ở thanh bên). Cần xem khoảng tin cậy của các trị riêng kề nhau xem chúng có bị trùng nhau không để cân nhắc chọn thêm hay loại bớt số thành phần chính.
     *   **Bảng phương sai:** Theo dõi % phương sai tích lũy (nên đạt trên 80-90%).
     *   **Loadings Heatmap:** Xem các biến gốc đóng góp bao nhiêu vào mỗi PC. Màu đậm hơn thể hiện sự ảnh hưởng mạnh hơn.
 
 ### 3. Tab Scatter Plot
-*   **Mục tiêu:** Trực quan hóa dữ liệu trong không gian mới.
+*   **Mục tiêu:** Trực quan hóa dữ liệu trong không gian mới. Đối với dữ liệu có phân lớp, sẽ có tính toán mô hình k-NN (5-fold cross validation) để thấy được tác dụng của việc dùng PCA để tiền xử lý dữ liệu cho tác vụ phân loại.
 *   **Cách dùng:**
     *   Chọn các trục PC để xem sự phân tán của dữ liệu (mặc định PC1 và PC2).
     *   Sử dụng tính năng **Biến phân lớp** để tô màu các điểm dữ liệu và quan sát phân cụm.
@@ -40,6 +42,7 @@ Nên sử dụng ứng dụng theo thứ tự 4 bước tương ứng với 4 Ta
 *   **Biểu đồ:** Chart.js, React-chartjs-2.
 *   **Xử lý dữ liệu:** 
     *   `ml-pca`: Thuật toán PCA chính.
+    *   `ml-knn`: Thuật toán k-NN.
     *   `papaparse`: Đọc và xử lý file CSV.
     *   `jstat`: Tính toán các chỉ số thống kê (Chi-square).
 

@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import Papa from 'papaparse';
-import { PCA } from 'ml-pca';
 import { jStat } from 'jstat';
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Title
