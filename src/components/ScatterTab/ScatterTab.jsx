@@ -82,6 +82,14 @@ const ScatterTab = ({ pcaResults, dataCtrl, pcaCtrl, viewCtrl }) => {
     });
   }, [rawData, maxClassNum]);
 
+  useEffect(() => {
+    if (classCol !== '(none)') {
+      if (!classifiableCols.includes(classCol)) {
+        setClassCol('(none)');
+      }
+    }
+  }, [classifiableCols, classCol]);
+
   // generate color with hue in HSL
   const getHSLColor = (index, total) => {
     const hue = (index * 360) / total;

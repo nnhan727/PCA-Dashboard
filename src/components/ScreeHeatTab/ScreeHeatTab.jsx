@@ -7,7 +7,8 @@ import '../element-style.css';
 import '../input-controller-style.css';
 import '../table-style.css';
 
-const ScreeHeatTab = ({ pcaResults, dataCtrl, pcaCtrl, selectedCols }) => {
+const ScreeHeatTab = ({ pcaResults, dataCtrl, pcaCtrl }) => {
+  const { rawData, selectedCols } = dataCtrl;
   const { eigenvalues } = pcaResults;
   const { confidence } = pcaCtrl;
 
@@ -25,7 +26,7 @@ const ScreeHeatTab = ({ pcaResults, dataCtrl, pcaCtrl, selectedCols }) => {
   }, [pcaResults]);
 
   const eigenvalueCI = useMemo(() => {
-    const n = dataCtrl.rawData.length;
+    const n = rawData.length;
     const zAlpha2 = jStat.normal.inv(1 - (1 - confidence) / 2, 0, 1);
     const errorFactor = zAlpha2 * Math.sqrt(2 / n);
 
@@ -249,33 +250,38 @@ const ScreeHeatTab = ({ pcaResults, dataCtrl, pcaCtrl, selectedCols }) => {
               </tr>
             </thead>
             <tbody>
-              {selectedCols.map((col, i) => (
-                <tr key={col} className="group">
-                  <td className="p-2 text-xs font-semibold text-slate-700 sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100">
-                    {col}
-                  </td>
-                  {pcaResults.loadings[i].slice(0, 10).map((val, j) => {
-                    const absVal = Math.abs(val);
-                    const bgColor = val > 0 
-                      ? `rgba(59, 130, 246, ${absVal * 0.9})` // Blue
-                      : `rgba(239, 68, 68, ${absVal * 0.9})`; // Red
-                    
-                    return (
-                      <td 
-                        key={j} 
-                        className="p-2 text-[11px] text-center font-mono rounded-md transition-transform hover:scale-105 cursor-default shadow-sm border border-white/20"
-                        style={{ 
-                          backgroundColor: bgColor, 
-                          color: absVal > 0.4 ? 'white' : '#475569' 
-                        }}
-                        title={`Loading của ${col} trên ${pcaResults.pcNames[j]}: ${val.toFixed(4)}`}
-                      >
-                        {val.toFixed(2)}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
+              {selectedCols.map((col, i) => {
+                const row = pcaResults.loadings[i];
+                if (!row) return null;
+                
+                return (
+                  <tr key={col} className="group">
+                    <td className="p-2 text-xs font-semibold text-slate-700 sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100">
+                      {col}
+                    </td>
+                    {row.slice(0, selectedCols.length).map((val, j) => {
+                      const absVal = Math.abs(val);
+                      const bgColor = val > 0 
+                        ? `rgba(59, 130, 246, ${absVal * 0.9})` // Blue
+                        : `rgba(239, 68, 68, ${absVal * 0.9})`; // Red
+                      
+                      return (
+                        <td 
+                          key={j} 
+                          className="p-2 text-[11px] text-center font-mono rounded-md transition-transform hover:scale-105 cursor-default shadow-sm border border-white/20"
+                          style={{ 
+                            backgroundColor: bgColor, 
+                            color: absVal > 0.4 ? 'white' : '#475569' 
+                          }}
+                          title={`Loading của ${col} trên ${pcaResults.pcNames[j]}: ${val.toFixed(4)}`}
+                        >
+                          {val.toFixed(2)}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

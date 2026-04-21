@@ -251,7 +251,6 @@ const App = () => {
                   pcaResults={pcaResults}
                   dataCtrl={dataCtrl}
                   pcaCtrl={pcaCtrl}
-                  selectedCols={selectedCols}
                 />
               </div>
 
