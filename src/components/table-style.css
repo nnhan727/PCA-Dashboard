@@ -1,0 +1,81 @@
+.table {
+  width: 100%; 
+  border-collapse: collapse;
+  text-align: left; 
+  font-size: 0.875rem; 
+  line-height: 1.25rem;
+}
+
+.table-head {
+  position: sticky; 
+  top: 0px; 
+  z-index: 30; 
+  background-color: rgb(248,250,252);
+}
+
+.table-head-item {
+  position: sticky;
+  top: 0px;
+  white-space: nowrap; 
+  border-bottom-width: 1px; 
+  border-color: rgb(226,232,240); 
+  padding-left: 1rem; 
+  padding-right: 1rem; 
+  padding-top: 0.75rem; 
+  padding-bottom: 0.75rem; 
+  font-weight: 700; 
+  color: rgb(71,85,105);
+  background-color: rgb(241,245,249);
+}
+
+.table-head-id-item {
+  position: sticky;
+  top: 0px;
+  left: 0px; 
+  z-index: 40; 
+  white-space: nowrap; 
+  border-bottom-width: 1px; 
+  border-color: rgb(226,232,240); 
+  padding-left: 1rem; 
+  padding-right: 1rem; 
+  padding-top: 0.75rem; 
+  padding-bottom: 0.75rem; 
+  font-weight: 700; 
+  color: rgb(71,85,105);
+  background-color: rgb(241,245,249);
+  border-right-width: 1px; 
+}
+
+.table-body {
+  border-top-width: calc(1px * calc(1 - 0)); 
+  border-bottom-width: calc(1px * 0); 
+  border-color: rgb(241,245,249);
+}
+
+.table-row-item {
+  white-space: nowrap; 
+  border-bottom-width: 1px; 
+  border-color: rgb(248,250,252); 
+  padding-left: 1rem; 
+  padding-right: 1rem; 
+  padding-top: 0.75rem; 
+  padding-bottom: 0.75rem; 
+  color: rgb(100,116,139);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.table-row-id-item {
+  position: sticky; 
+  left: 0px; 
+  z-index: 10; 
+  border-right-width: 1px; 
+  border-color: rgb(241,245,249); 
+  background-color: rgb(248,250,252); 
+  padding-left: 1rem; 
+  padding-right: 1rem; 
+  padding-top: 0.75rem; 
+  padding-bottom: 0.75rem; 
+  font-weight: 700;
+  color: rgb(37,99,235);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}

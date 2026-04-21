@@ -1,7 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { Scatter } from 'react-chartjs-2';
+import { RotateCcw } from 'lucide-react';
+
 import 'katex/dist/katex.min.css';
 import katex from 'katex';
+
+import '../element-style.css';
+import '../table-style.css';
 
 const KatexDisplay = ({ math, block }) => {
   const ref = useRef();
@@ -63,7 +68,7 @@ const T2Tab = ({ t2Stats, rawData, selectedCols, k }) => {
   const DetectionTable = ({ title, indices, colorClass, borderClass }) => (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
 
-      <div className={`p-3 ${colorClass} text-white flex justify-between items-center`}>
+      <div className={`p-3 ${colorClass} text-white spread-container`}>
         <h4 className="font-bold tracking-wide">{title}</h4>
         <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-bold border border-white/30">
           {indices.length} điểm
@@ -71,27 +76,27 @@ const T2Tab = ({ t2Stats, rawData, selectedCols, k }) => {
       </div>
 
       <div className="overflow-x-auto max-h-96">
-        <table className="w-full text-sm text-left border-collapse">
-          <thead className="bg-slate-50 sticky top-0 z-30">
+        <table className="table">
+          <thead className="table-head">
             <tr className="border-b border-slate-200">
-              <th className="px-4 py-3 text-slate-600 font-bold bg-slate-100 sticky left-0 top-0 z-40 border-r border-slate-200">
+              <th className="table-head-id-item">
                 Index
               </th>
               {allColumns.map(c => (
-                <th key={c} className="px-4 py-3 text-slate-600 font-bold whitespace-nowrap border-b border-slate-200 bg-slate-50">
+                <th key={c} className="table-head-item">
                   {c}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="table-body">
             {indices.map(idx => (
-              <tr key={idx} className="hover:bg-slate-50/80 transition-colors group">
-                <td className="px-4 py-3 font-bold text-blue-600 bg-slate-50 sticky left-0 z-10 border-r border-slate-100 group-hover:bg-blue-50">
+              <tr key={idx}>
+                <td className="table-row-id-item">
                   {idx}
                 </td>
                 {allColumns.map(c => (
-                  <td key={c} className="px-4 py-3 text-slate-500 whitespace-nowrap">
+                  <td key={c} className="table-row-item">
                     {rawData[idx][c] !== null ? String(rawData[idx][c]) : '-'}
                   </td>
                 ))}
@@ -111,13 +116,33 @@ const T2Tab = ({ t2Stats, rawData, selectedCols, k }) => {
     </div>
   );
 
+  // reset zoom & pan
+  const chartRef = useRef(null);
+  const handleResetZoom = () => {
+    if (chartRef.current) {
+      // zoomPlugin function
+      chartRef.current.resetZoom();
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <h3 className="font-bold text-lg mb-6 text-slate-800">Biểu đồ kiểm soát</h3>
+        <div className="lg:col-span-2 card-container">
+          <div className="spread-container">
+            <h3 className="card-title">Biểu đồ kiểm soát</h3>
+
+            <button 
+              onClick={handleResetZoom}
+              className="button"
+            >
+              <RotateCcw size={20} />
+            </button>
+          </div>
+          <div className="h-6"></div>
           <div className="h-150">
             <Scatter 
+              ref={chartRef}
               data={{
                 datasets: [{
                   label: 'Dữ liệu',
@@ -144,6 +169,21 @@ const T2Tab = ({ t2Stats, rawData, selectedCols, k }) => {
                   },
                   annotation: {
                     annotations: annotations
+                  },
+                  zoom: {
+                    pan: {
+                      enabled: true,
+                      mode: 'xy',
+                    },
+                    zoom: {
+                      wheel: {
+                        enabled: true,
+                      },
+                      pinch: {
+                        enabled: true,
+                      },
+                      mode: 'xy',
+                    },
                   }
                 }
               }}

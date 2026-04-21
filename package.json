@@ -7,16 +7,20 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
     "chart.js": "^4.5.1",
     "chartjs-plugin-annotation": "^3.1.0",
+    "chartjs-plugin-zoom": "^2.2.0",
     "gh-pages": "^6.3.0",
     "jstat": "^1.9.6",
     "katex": "^0.16.45",
     "lucide-react": "^1.8.0",
+    "ml-knn": "^3.0.0",
     "ml-matrix": "^6.12.1",
     "ml-pca": "^4.1.1",
     "papaparse": "^5.5.3",

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Papa from 'papaparse';
 import { PCA } from 'ml-pca';
 import { jStat } from 'jstat';
@@ -9,14 +9,15 @@ import {
   LayoutGrid, AlertCircle, Database, ChartScatter
 } from 'lucide-react';
 import annotationPlugin from 'chartjs-plugin-annotation';
+import zoomPlugin from 'chartjs-plugin-zoom';
 
-import Sidebar from './components/Sidebar';
-import DataTab from './components/DataTab';
-import ScreeHeatTab from './components/ScreeHeatTab';
-import ScatterTab from './components/ScatterTab';
-import T2Tab from './components/T2Tab';
+import Sidebar from './components/Sidebar/Sidebar';
+import DataTab from './components/DataTab/DataTab';
+import ScreeHeatTab from './components/ScreeHeatTab/ScreeHeatTab';
+import ScatterTab from './components/ScatterTab/ScatterTab';
+import T2Tab from './components/T2Tab/T2Tab';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Title, annotationPlugin);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Title, annotationPlugin, zoomPlugin);
 
 const App = () => {
   const [fileName, setFileName] = useState("");
@@ -24,12 +25,14 @@ const App = () => {
   const [rawData, setRawData] = useState([]);
   const [columns, setColumns] = useState([]);
   const [selectedCols, setSelectedCols] = useState([]);
+  const [maxClassNum, setMaxClassNum] = useState(10);
 
   const dataCtrl = useMemo(() => ({
     rawData, setRawData,
     columns, setColumns,
-    selectedCols, setSelectedCols
-  }), [rawData, columns, selectedCols]);
+    selectedCols, setSelectedCols,
+    maxClassNum, setMaxClassNum
+  }), [rawData, columns, selectedCols, maxClassNum]);
 
   const [k, setK] = useState(2);
   const [standardize, setStandardize] = useState(true);
@@ -55,6 +58,7 @@ const App = () => {
     classCol, setClassCol
   }), [activeTab, plotMode, xAxis, yAxis, classCol]);
   
+  // read input file, remove row with no data
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -68,6 +72,7 @@ const App = () => {
     setYAxis('PC2');
     setClassCol('(none)');
     setStandardize(false);
+    setMaxClassNum(10);
     
     Papa.parse(file, {
       header: true,
@@ -76,13 +81,28 @@ const App = () => {
       complete: (results) => {
         const allKeys = Object.keys(results.data[0]);
         
+        // filter numerical variables
         const numeric = allKeys.filter(key => {
           return results.data.slice(0, 5).some(row => typeof row[key] === 'number');
         });
 
-        const cleanedData = results.data.filter(row => 
-          numeric.every(col => row[col] !== null && row[col] !== undefined && !isNaN(row[col]))
-        );
+        // remove all rows with null/NaN/empty data
+        const cleanedData = results.data.filter(row => {
+          return allKeys.every(key => {
+            const val = row[key];
+            
+            // null/undefined
+            if (val === null || val === undefined) return false;
+            
+            // NaN
+            if (typeof val === 'number' && isNaN(val)) return false;
+            
+            // empty string
+            if (typeof val === 'string' && val.trim() === "") return false;
+            
+            return true;
+          });
+        });
 
         // update states from new data
         setRawData(cleanedData);
@@ -95,33 +115,55 @@ const App = () => {
     });
   };
 
-  const pcaResults = useMemo(() => {
-    if (rawData.length === 0 || selectedCols.length < 2) return null;
+  const [pcaResults, setPcaResults] = useState(null);
+  const [isPcaLoading, setIsPcaLoading] = useState(false);
 
-    let X_raw = rawData.map(row => selectedCols.map(col => row[col] || 0));
-    const pca = new PCA(X_raw, { scale: standardize });
-    
-    return {
-      eigenvalues: pca.getEigenvalues(),
-      loadings: pca.getEigenvectors().to2DArray(),
-      scores: pca.predict(X_raw).to2DArray(),
-      explainedVar: pca.getExplainedVariance(),
-      pcNames: pca.getEigenvalues().map((_, i) => `PC${i + 1}`)
+  useEffect(() => {
+    if (rawData.length === 0) {
+      setPcaResults(null);
+      return;
+    }
+
+    setIsPcaLoading(true);
+
+    const worker = new Worker(new URL('./pca.worker.js', import.meta.url), {
+      type: 'module'
+    });
+
+    worker.postMessage({
+      rawData,
+      standardize,
+      selectedCols
+    });
+
+    worker.onmessage = ({ data }) => {
+      if (data.error) {
+        console.error("PCA Worker Error:", data.error);
+      } else {
+        setPcaResults(data);
+      }
+      setIsPcaLoading(false);
+      worker.terminate();
     };
-  }, [rawData, selectedCols, standardize]);
 
+    return () => worker.terminate();
+  }, [rawData, selectedCols, standardize]);
+  
+  // calculate T2 stats
   const t2Stats = useMemo(() => {
     if (!pcaResults) return null;
 
     const { scores, eigenvalues } = pcaResults;
     const p = eigenvalues.length;
 
+    // Mahalanobis distance to center in main space
     const hotellingT2 = scores.map(row => {
       let sum = 0;
       for (let i = 0; i < k; i++) sum += (row[i] ** 2) / (eigenvalues[i] + 1e-12);
       return sum;
     });
 
+    // Mahalanobis distance to center in residual space
     const residualT2 = scores.map(row => {
       let sum = 0;
       for (let i = k; i < p; i++) sum += (row[i] ** 2) / (eigenvalues[i] + 1e-12);
@@ -147,19 +189,36 @@ const App = () => {
       />
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 flex flex-col min-w-0">
-        {!pcaResults ? (
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        
+        {/* no data */}
+        {rawData.length === 0 && !isPcaLoading && (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400 gap-4">
             <div className="bg-white p-8 rounded-full shadow-sm border border-slate-100">
               <Database size={64} className="text-slate-200" />
             </div>
-            <p className="text-lg font-medium">Chưa có dữ liệu để phân tích</p>
+            <p className="text-lg font-medium text-slate-400">Chưa có dữ liệu để phân tích</p>
             <p className="text-sm">Hãy tải lên một tệp CSV từ thanh bên trái</p>
           </div>
-        ) : (
+        )}
+
+        {/* calculate PCA */}
+        {isPcaLoading && (
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-slate-50/50">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-slate-700">Đang tính toán PCA...</p>
+            </div>
+          </div>
+        )}
+
+        {/* show results */}
+        {!isPcaLoading && pcaResults && (
           <>
             {/* TABS NAVIGATION */}
-            <header className="bg-white border-b border-slate-200 px-8 pt-6">
+            <header className="bg-white border-b border-slate-200 px-8 pt-6 flex-none">
               <div className="flex gap-8">
                 {[
                   { id: 'data', label: 'Dữ liệu', icon: <Database size={18}/> },
@@ -182,21 +241,37 @@ const App = () => {
               </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+            {/* TAB CONTENT */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
               <div className={activeTab === 'data' ? 'block' : 'hidden'}>
                 <DataTab dataCtrl={dataCtrl} />
               </div>
 
               <div className={activeTab === 'scree' ? 'block' : 'hidden'}>
-                <ScreeHeatTab pcaResults={pcaResults} selectedCols={selectedCols} />
+                <ScreeHeatTab
+                  pcaResults={pcaResults}
+                  dataCtrl={dataCtrl}
+                  pcaCtrl={pcaCtrl}
+                  selectedCols={selectedCols}
+                />
               </div>
 
               <div className={activeTab === 'scatter' ? 'block' : 'hidden'}>
-                <ScatterTab pcaResults={pcaResults} dataCtrl={dataCtrl} viewCtrl={viewCtrl} />
+                <ScatterTab
+                  pcaResults={pcaResults}
+                  dataCtrl={dataCtrl}
+                  pcaCtrl={pcaCtrl}
+                  viewCtrl={viewCtrl}
+                />
               </div>
 
               <div className={activeTab === 'stats' ? 'block' : 'hidden'}>
-                <T2Tab t2Stats={t2Stats} rawData={rawData} selectedCols={selectedCols} k={k} />
+                <T2Tab
+                  t2Stats={t2Stats}
+                  rawData={rawData}
+                  selectedCols={selectedCols}
+                  k={k}
+                />
               </div>
             </div>
           </>
