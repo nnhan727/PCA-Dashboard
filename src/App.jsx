@@ -58,11 +58,10 @@ const App = () => {
   }), [activeTab, plotMode, xAxis, yAxis, classCol]);
   
   // read input file, remove row with no data
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
+  const processFile = (file) => {
     if (!file) return;
     setFileName(file.name);
-
+    
     // reset states
     setRawData([]);
     setActiveTab('data');
@@ -72,7 +71,7 @@ const App = () => {
     setClassCol('(none)');
     setStandardize(false);
     setMaxClassNum(10);
-    
+
     Papa.parse(file, {
       header: true,
       dynamicTyping: true,
@@ -110,8 +109,13 @@ const App = () => {
         
         const defaultK = Math.min(2, numeric.length);
         setK(defaultK);
-      },
+      }
     });
+  };
+
+  // for "file" input type
+  const handleFileUpload = (e) => {
+    processFile(e.target.files[0]);
   };
 
   const [pcaResults, setPcaResults] = useState(null);
@@ -184,6 +188,7 @@ const App = () => {
         dataCtrl={dataCtrl}
         pcaCtrl={pcaCtrl}
         handleFileUpload={handleFileUpload}
+        processFile={processFile}
         fileName={fileName}
       />
 

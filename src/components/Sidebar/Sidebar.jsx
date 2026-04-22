@@ -14,7 +14,7 @@ const SidebarSection = ({ title, children }) => (
   </div>
 );
 
-const Sidebar = ({ dataCtrl, pcaCtrl, handleFileUpload, fileName }) => {
+const Sidebar = ({ dataCtrl, pcaCtrl, handleFileUpload, processFile, fileName }) => {
   const { columns, selectedCols, setSelectedCols, maxClassNum, setMaxClassNum } = dataCtrl;
   const { k, setK, standardize, setStandardize, confidence, setConfidence } = pcaCtrl;
 
@@ -33,6 +33,30 @@ const Sidebar = ({ dataCtrl, pcaCtrl, handleFileUpload, fileName }) => {
     setTempConf(confidence);
   }, [confidence]);
 
+  const [isDragging, setIsDragging] = useState(false);
+
+  // drag file into upload area
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === "text/csv" || file.name.endsWith('.csv')) {
+      processFile(file);
+    } else {
+      alert("Vui lòng chỉ thả file CSV!");
+    }
+  };
+
   return (
     <aside className="w-80 bg-white border-r border-slate-200 flex flex-col shadow-sm">
       <div className="p-6 border-b border-slate-100">
@@ -44,10 +68,20 @@ const Sidebar = ({ dataCtrl, pcaCtrl, handleFileUpload, fileName }) => {
       <div className="flex-1 overflow-y-auto p-6">
         <SidebarSection title="Dữ liệu đầu vào">
           {!fileName ? (
-            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+            <label 
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all
+                ${isDragging 
+                  ? 'border-blue-500 bg-blue-50 scale-[1.02]' 
+                  : 'border-slate-200 bg-white hover:bg-slate-50'}`}
+            >
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <Upload className="w-8 h-8 text-slate-400 mb-2" />
-                <p className="text-sm text-slate-500">Kéo thả hoặc nhấn để chọn file CSV</p>
+                <Upload className={`w-8 h-8 mb-2 transition-colors ${isDragging ? 'text-blue-500' : 'text-slate-400'}`} />
+                <p className="text-sm text-slate-500">
+                  {isDragging ? "Thả file để upload" : "Kéo thả hoặc nhấn để chọn file CSV"}
+                </p>
               </div>
               <input type="file" className="hidden" onChange={handleFileUpload} accept=".csv" />
             </label>
